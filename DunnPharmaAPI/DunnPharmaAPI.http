@@ -1,0 +1,6 @@
+@DunnPharmaAPI_HostAddress = http://localhost:5285
+
+GET {{DunnPharmaAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
