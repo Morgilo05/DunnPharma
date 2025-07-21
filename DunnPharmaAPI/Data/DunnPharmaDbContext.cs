@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using DunnPharmaAPI.Models;
 using System.Collections.Generic;
+using DunnPharma.API.Models;
+using DunnPharma.API.DTOs;
 
 namespace DunnPharmaAPI.Data
 {
@@ -32,8 +34,11 @@ namespace DunnPharmaAPI.Data
         public DbSet<PermisoModulo> PermisoModulo { get; set; }
           
         public DbSet<Surtido> Surtidos { get; set; }
+        public DbSet<InventarioItemRaw> InventarioItems { get; set; }
+        public DbSet<LoteRaw> LotesPorProducto { get; set; }
+        public DbSet<CardexItemDto> CardexItems { get; set; } // DTO para resultados de Cardex
 
-
+        public DbSet<PedidoListadoDto> PedidosListados { get; set; } // DTO para resultados de pedidos listados
 
 
 
@@ -42,6 +47,10 @@ namespace DunnPharmaAPI.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<InventarioItemRaw>().HasNoKey();
+            modelBuilder.Entity<LoteRaw>().HasNoKey();
+            modelBuilder.Entity<CardexItemDto>().HasNoKey();
+            modelBuilder.Entity<PedidoListadoDto>().HasNoKey();
         }
     }
 }

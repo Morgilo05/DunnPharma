@@ -3,7 +3,9 @@ using DunnPharmaAPI.DTOs;
 using DunnPharmaAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace DunnPharmaAPI.Controllers
 {
@@ -177,6 +179,52 @@ namespace DunnPharmaAPI.Controllers
                 //// Loguear el error 'ex' en un sistema de logs  
                 //return StatusCode(500, "Ocurrió un error interno al procesar el pedido.");
             }
+        }
+        // GET: api/Pedidos
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<PedidoListadoDto>>> GetPedidos()
+        {
+            var pedidos = await _context.Set<PedidoListadoDto>()
+                .FromSqlRaw("EXEC sp_GetPedidos")
+                .ToListAsync();
+            return Ok(pedidos);
+        }
+
+        // GET: api/Pedidos/ParaEdicion/{id}
+        [HttpGet("ParaEdicion/{id}")]
+        public async Task<ActionResult<PedidoEdicionDto>> GetPedidoParaEdicion(int id)
+        {
+            var idParam = new SqlParameter("@IdPedido", id);
+
+            var pedido = await _context.Pedidos
+                .FromSqlRaw("EXEC sp_GetPedidoParaEdicion @IdPedido", idParam)
+                .ToListAsync();
+
+            var detalles = await _context.PedidoDetalle
+                .FromSqlRaw("EXEC sp_GetPedidoParaEdicion @IdPedido", idParam)
+                .ToListAsync();
+
+            if (pedido.FirstOrDefault() == null) return NotFound();
+
+            return Ok(new PedidoEdicionDto { Pedido = pedido.First(), Detalles = detalles });
+        }
+
+        // DELETE: api/Pedidos/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarPedido(int id, [FromQuery] string motivo)
+        {
+            var usuario = User.FindFirst(ClaimTypes.Name)?.Value ?? "Sistema";
+
+            var parameters = new[]
+            {
+        new SqlParameter("@IdPedido", id),
+        new SqlParameter("@UsuarioElimina", usuario),
+        new SqlParameter("@Motivo", motivo)
+    };
+
+            await _context.Database.ExecuteSqlRawAsync("EXEC sp_EliminarPedido @IdPedido, @UsuarioElimina, @Motivo", parameters);
+
+            return NoContent();
         }
     }
 }
