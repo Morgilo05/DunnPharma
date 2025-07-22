@@ -116,13 +116,20 @@ namespace DunnPharmaAPI.Controllers
 
         // PUT: api/productos/{id}
         [HttpPut("{id}")]
-        public async Task<ActionResult> Editar(int id, [FromBody] ProductoDto dto)
+        public async Task<ActionResult> Editar(int id, [FromBody] EditarProductoDto dto) // ✅ CAMBIO AQUÍ
         {
             var producto = await _context.Productos.FindAsync(id);
             if (producto == null)
                 return NotFound("Producto no encontrado.");
 
-            // ... (tu validación de duplicados está bien) ...
+            // Validación de duplicados (excluyendo el producto actual)
+            if (await _context.Productos.AnyAsync(p => p.Nombre.ToLower() == dto.Nombre.ToLower() && p.IdProducto != id))
+                return BadRequest("Ya existe otro producto con ese nombre.");
+
+            // Validar que el laboratorio exista
+            bool laboratorioExiste = await _context.Laboratorios.AnyAsync(l => l.IdLaboratorio == dto.IdLaboratorio);
+            if (!laboratorioExiste)
+                return BadRequest("El laboratorio especificado no existe.");
 
             // Verificamos si el costo ha cambiado antes de actualizar
             bool costoHaCambiado = producto.Costo != dto.Costo;
@@ -148,7 +155,7 @@ namespace DunnPharmaAPI.Controllers
                     var porcentaje = precioCliente.Cliente.ListaPrecio?.PorcentajeAumento ?? 0;
                     precioCliente.Precio = Math.Ceiling(producto.Costo + (producto.Costo * porcentaje / 100));
                     precioCliente.FechaRegistro = DateTime.Now; // Actualizamos la fecha de modificación del precio
-                    precioCliente.UsuarioRegistro = "admin"; // Reemplazar
+                    precioCliente.UsuarioRegistro = "admin"; // Reemplazar por usuario autenticado
                 }
             }
 

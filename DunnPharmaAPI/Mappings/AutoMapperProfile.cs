@@ -30,6 +30,9 @@ namespace DunnPharmaAPI.Mappings
             // De ProductoDto (para peticiones a la API) a Producto (Entidad)
             CreateMap<ProductoDto, Producto>()
                 .ForMember(dest => dest.Laboratorio, opt => opt.Ignore()); // Ignoramos la propiedad de navegación para evitar errores
+
+            CreateMap<EditarProductoDto, Producto>()
+       .ForMember(dest => dest.Laboratorio, opt => opt.Ignore());
         }
     }
 }
